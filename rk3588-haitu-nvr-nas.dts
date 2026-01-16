@@ -153,6 +153,42 @@
 	};
 };
 
+&csi2_dphy0_hw {
+	status = "okay";
+};
+
+&csi2_dphy0 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			csidphy0_in: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&lt6911_in>;
+				data-lanes = <1 2>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			csidphy0_out: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&mipi2_csi2_input>;
+			};
+		};
+	};
+};
+
 &display_subsystem {
 	route {
 
@@ -163,15 +199,64 @@
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_dp0>;
+			force-output;
+			force_timing {
+				clock-frequency = <0x03dfd240>;
+				hactive = <0x00000400>;
+				vactive = <0x00000300>;
+				hfront-porch = <0x00000018>;
+				hsync-len = <0x00000088>;
+				hback-porch = <0x000000a0>;
+				vfront-porch = <0x00000003>;
+				vsync-len = <0x00000006>;
+				vback-porch = <0x0000001d>;
+				hsync-active = <0x00000000>;
+				vsync-active = <0x00000000>;
+				de-active = <0x00000000>;
+				pixelclk-active = <0x00000000>;
+			};
 		};
 
 		route_hdmi0: route-hdmi0 {
+			overscan,bottom_margin = <0x00000064>;
+			overscan,top_margin = <0x00000064>;
+			overscan,right_margin = <0x00000064>;
+			overscan,left_margin = <0x00000064>;
+			video,aspect_ratio = <0x00000000>;
+			video,flags = <0x0000000a>;
+			video,vrefresh = <0x0000003c>;
+			video,crtc_vsync_end = <0x00000309>;
+			video,crtc_hsync_end = <0x000004a0>;
+			video,vdisplay = <0x00000300>;
+			video,hdisplay = <0x00000400>;
+			video,clock = <0x0000fde8>;
+			logo,ymirror = <0x00000000>;
+			logo,bpp = <0x00000010>;
+			logo,height = <0x0000010e>;
+			logo,width = <0x0000028e>;
+			logo,offset = <0x00061000>;
 			status = "okay";
 			logo,uboot = "logo.bmp";
 			logo,kernel = "logo_kernel.bmp";
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_hdmi0>;
+			force-output;
+			force_timing {
+				clock-frequency = <0x03dfd240>;
+				hactive = <0x00000400>;
+				vactive = <0x00000300>;
+				hfront-porch = <0x00000018>;
+				hsync-len = <0x00000088>;
+				hback-porch = <0x000000a0>;
+				vfront-porch = <0x00000003>;
+				vsync-len = <0x00000006>;
+				vback-porch = <0x0000001d>;
+				hsync-active = <0x00000000>;
+				vsync-active = <0x00000000>;
+				de-active = <0x00000000>;
+				pixelclk-active = <0x00000000>;
+			};
 		};
 
 		route_dp1: route-dp1 {
@@ -181,6 +266,22 @@
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_dp1>;
+			force-output;
+			force_timing {
+				clock-frequency = <0x03dfd240>;
+				hactive = <0x00000400>;
+				vactive = <0x00000300>;
+				hfront-porch = <0x00000018>;
+				hsync-len = <0x00000088>;
+				hback-porch = <0x000000a0>;
+				vfront-porch = <0x00000003>;
+				vsync-len = <0x00000006>;
+				vback-porch = <0x0000001d>;
+				hsync-active = <0x00000000>;
+				vsync-active = <0x00000000>;
+				de-active = <0x00000000>;
+				pixelclk-active = <0x00000000>;
+			};
 		};
 
 		route_hdmi1: route-hdmi1 {
@@ -190,6 +291,22 @@
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_hdmi1>;
+			force-output;
+			force_timing {
+				clock-frequency = <0x03dfd240>;
+				hactive = <0x00000400>;
+				vactive = <0x00000300>;
+				hfront-porch = <0x00000018>;
+				hsync-len = <0x00000088>;
+				hback-porch = <0x000000a0>;
+				vfront-porch = <0x00000003>;
+				vsync-len = <0x00000006>;
+				vback-porch = <0x0000001d>;
+				hsync-active = <0x00000000>;
+				vsync-active = <0x00000000>;
+				de-active = <0x00000000>;
+				pixelclk-active = <0x00000000>;
+			};
 		};
 	};
 };
@@ -430,11 +547,50 @@
 &isp0_mmu {
 	status = "okay";
 };
+&mipi2_csi2 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			mipi2_csi2_input: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&csidphy0_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			mipi2_csi2_output: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&cif_mipi_in2>;
+			};
+		};
+	};
+};
 &rkcif {
 	status = "okay";
 };
 &rkcif_mmu {
 	status = "okay";
+};
+&rkcif_mipi_lvds2 {
+	status = "okay";
+
+	port {
+		cif_mipi_in2: endpoint {
+			remote-endpoint = <&mipi2_csi2_output>;
+		};
+	};
 };
 &vop {
 	assigned-clocks = <&cru ACLK_VOP>;
@@ -1002,6 +1158,25 @@
 		interrupt-parent = <&gpio2>;
 		interrupts = <RK_PB5 IRQ_TYPE_LEVEL_LOW>;
 		wakeup-source;
+	};
+
+    lt6911@2b {
+		status = "okay";
+		compatible = "lontium,lt6911uxc";
+		reg = <0x2b>;
+		reset-gpio = <&gpio4 RK_PA2 1>;
+		interrupt-parent = <&gpio4>;
+		interrupts = <RK_PA5 2>;
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		rockchip,camera-module-name = "CMK-CT0116";
+		rockchip,camera-module-lens-name = "Largan-50013A1";
+		port {
+			lt6911_in: endpoint {
+				remote-endpoint = <&csidphy0_in>;
+				data-lanes = <1 2 3 4>;
+			};
+		};
 	};
 };
 &usbdp_phy0 {
