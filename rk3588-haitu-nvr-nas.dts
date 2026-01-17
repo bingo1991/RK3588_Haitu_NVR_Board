@@ -6,15 +6,10 @@
 
 /dts-v1/;
 
-#include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/pwm/pwm.h>
-#include <dt-bindings/pinctrl/rockchip.h>
-#include <dt-bindings/input/rk-input.h>
-#include <dt-bindings/display/drm_mipi_dsi.h>
-#include <dt-bindings/display/rockchip_vop.h>
-#include <dt-bindings/sensor-dev.h>
+
 #include <dt-bindings/usb/pd.h>
 #include "rk3588.dtsi"
+#include "rk3588-nvr.dtsi"
 #include "rk3588-linux.dtsi"
 
 / {
@@ -52,6 +47,21 @@
 	};
 	test-power {
 		status = "okay";
+	};
+	leds: leds {
+		compatible = "gpio-leds";
+		hdd_led: hdd-led {
+			gpios = <&gpio3 RK_PC1 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+		net_led: net-led {
+			gpios = <&gpio3 RK_PC0 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+		work_led: work-led {
+			gpios = <&gpio3 RK_PB7 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
 	};
 	pcie30_avdd0v75: pcie30-avdd0v75 {
 		compatible = "regulator-fixed";
@@ -144,7 +154,7 @@
 		regulator-max-microvolt = <1100000>;
 		vin-supply = <&vcc5v0_sys>;
 	};
-	clk_cam: external-camera-clock {
+	ext_cam_clk: external-camera-clock {
 		status = "okay";
 		compatible = "fixed-clock";
 		clock-frequency = <27000000>;
@@ -169,9 +179,9 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 
-			csidphy0_in: endpoint@1 {
+			hdmi_mipi_in: endpoint@1 {
 				reg = <1>;
-				remote-endpoint = <&lt6911_in>;
+				remote-endpoint = <&lt6911uxc_out0>;
 				data-lanes = <1 2>;
 			};
 		};
@@ -199,64 +209,15 @@
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_dp0>;
-			force-output;
-			force_timing {
-				clock-frequency = <0x03dfd240>;
-				hactive = <0x00000400>;
-				vactive = <0x00000300>;
-				hfront-porch = <0x00000018>;
-				hsync-len = <0x00000088>;
-				hback-porch = <0x000000a0>;
-				vfront-porch = <0x00000003>;
-				vsync-len = <0x00000006>;
-				vback-porch = <0x0000001d>;
-				hsync-active = <0x00000000>;
-				vsync-active = <0x00000000>;
-				de-active = <0x00000000>;
-				pixelclk-active = <0x00000000>;
-			};
 		};
 
 		route_hdmi0: route-hdmi0 {
-			overscan,bottom_margin = <0x00000064>;
-			overscan,top_margin = <0x00000064>;
-			overscan,right_margin = <0x00000064>;
-			overscan,left_margin = <0x00000064>;
-			video,aspect_ratio = <0x00000000>;
-			video,flags = <0x0000000a>;
-			video,vrefresh = <0x0000003c>;
-			video,crtc_vsync_end = <0x00000309>;
-			video,crtc_hsync_end = <0x000004a0>;
-			video,vdisplay = <0x00000300>;
-			video,hdisplay = <0x00000400>;
-			video,clock = <0x0000fde8>;
-			logo,ymirror = <0x00000000>;
-			logo,bpp = <0x00000010>;
-			logo,height = <0x0000010e>;
-			logo,width = <0x0000028e>;
-			logo,offset = <0x00061000>;
 			status = "okay";
 			logo,uboot = "logo.bmp";
 			logo,kernel = "logo_kernel.bmp";
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_hdmi0>;
-			force-output;
-			force_timing {
-				clock-frequency = <0x03dfd240>;
-				hactive = <0x00000400>;
-				vactive = <0x00000300>;
-				hfront-porch = <0x00000018>;
-				hsync-len = <0x00000088>;
-				hback-porch = <0x000000a0>;
-				vfront-porch = <0x00000003>;
-				vsync-len = <0x00000006>;
-				vback-porch = <0x0000001d>;
-				hsync-active = <0x00000000>;
-				vsync-active = <0x00000000>;
-				de-active = <0x00000000>;
-				pixelclk-active = <0x00000000>;
-			};
 		};
 
 		route_dp1: route-dp1 {
@@ -266,22 +227,6 @@
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_dp1>;
-			force-output;
-			force_timing {
-				clock-frequency = <0x03dfd240>;
-				hactive = <0x00000400>;
-				vactive = <0x00000300>;
-				hfront-porch = <0x00000018>;
-				hsync-len = <0x00000088>;
-				hback-porch = <0x000000a0>;
-				vfront-porch = <0x00000003>;
-				vsync-len = <0x00000006>;
-				vback-porch = <0x0000001d>;
-				hsync-active = <0x00000000>;
-				vsync-active = <0x00000000>;
-				de-active = <0x00000000>;
-				pixelclk-active = <0x00000000>;
-			};
 		};
 
 		route_hdmi1: route-hdmi1 {
@@ -291,22 +236,6 @@
 			logo,mode = "center";
 			charge_logo,mode = "center";
 			connect = <&vp2_out_hdmi1>;
-			force-output;
-			force_timing {
-				clock-frequency = <0x03dfd240>;
-				hactive = <0x00000400>;
-				vactive = <0x00000300>;
-				hfront-porch = <0x00000018>;
-				hsync-len = <0x00000088>;
-				hback-porch = <0x000000a0>;
-				vfront-porch = <0x00000003>;
-				vsync-len = <0x00000006>;
-				vback-porch = <0x0000001d>;
-				hsync-active = <0x00000000>;
-				vsync-active = <0x00000000>;
-				de-active = <0x00000000>;
-				pixelclk-active = <0x00000000>;
-			};
 		};
 	};
 };
@@ -433,6 +362,12 @@
 			regulator-off-in-suspend;
 		};
 	};
+};
+&uart0 {
+    status = "okay";
+    pinctrl-names = "default";
+    pinctrl-0 = <&uart0m2_xfer>;
+
 };
 &rknpu {
 	rknpu-supply = <&vdd_npu_s0>;
@@ -647,6 +582,37 @@
 };
 &hdmi0_sound {
 	status = "okay";
+};
+&hdptxphy_hdmi0 {
+	status = "okay";
+};
+&gmac0 {
+	/* Use rgmii-rxid mode to disable rx delay inside Soc */
+	phy-mode = "rgmii-rxid";
+	clock_in_out = "output";
+
+	snps,reset-gpio = <&gpio4 RK_PB3 GPIO_ACTIVE_LOW>;
+	snps,reset-active-low;
+	/* Reset time is 20ms, 100ms for rtl8211f */
+	snps,reset-delays-us = <0 20000 100000>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac0_miim
+		     &gmac0_tx_bus2
+		     &gmac0_rx_bus2
+		     &gmac0_rgmii_clk
+		     &gmac0_rgmii_bus>;
+
+	tx_delay = <0x44>;
+
+	phy-handle = <&rgmii_phy0>;
+	status = "okay";
+};
+&mdio0 {
+	rgmii_phy0: phy@1 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x1>;
+	};
 };
 &sata0 {
 	status = "okay";
@@ -1160,10 +1126,12 @@
 		wakeup-source;
 	};
 
-    lt6911@2b {
+    lt6911uxc: lt6911uxc@2b {
 		status = "okay";
 		compatible = "lontium,lt6911uxc";
 		reg = <0x2b>;
+		clocks = <&ext_cam_clk>;
+		clock-names = "xvclk";
 		reset-gpio = <&gpio4 RK_PA2 1>;
 		interrupt-parent = <&gpio4>;
 		interrupts = <RK_PA5 2>;
@@ -1172,8 +1140,8 @@
 		rockchip,camera-module-name = "CMK-CT0116";
 		rockchip,camera-module-lens-name = "Largan-50013A1";
 		port {
-			lt6911_in: endpoint {
-				remote-endpoint = <&csidphy0_in>;
+			lt6911uxc_out0: endpoint {
+				remote-endpoint = <&hdmi_mipi_in>;
 				data-lanes = <1 2 3 4>;
 			};
 		};
@@ -1241,6 +1209,17 @@
 			rockchip,pins = <4 RK_PA7 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
+	pcie {
+		power-en {
+			rockchip,pins = <2 RK_PB4 RK_FUNC_GPIO &pcfg_output_high>;
+		};
+	};
+	gmac0_reset {
+		rockchip,pins = <4 RK_PB2 RK_FUNC_GPIO &pcfg_pull_up>;
+	};
+	gmac1_reset {
+		rockchip,pins = <4 RK_PB3 RK_FUNC_GPIO &pcfg_pull_up>;
+	};
 	hdmirx_det: hdmi_rx_det {
 		rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_up>;
 	};
@@ -1289,6 +1268,9 @@
 &hdmi1_sound {
 	status = "okay";
 };
+&hdptxphy_hdmi1 {
+	status = "okay";
+};
 &hdmirx_ctrler { 
 	status = "okay"; 
 
@@ -1302,6 +1284,34 @@
 	reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
 	vpcie3v3-supply = <&vcc3v3_pcie30>;
 	status = "okay";
+};
+&gmac1 {
+	/* Use rgmii-rxid mode to disable rx delay inside Soc */
+	phy-mode = "rgmii-rxid";
+	clock_in_out = "output";
+
+	snps,reset-gpio = <&gpio4 RK_PA2 GPIO_ACTIVE_LOW>;
+	snps,reset-active-low;
+	/* Reset time is 20ms, 100ms for rtl8211f */
+	snps,reset-delays-us = <0 20000 100000>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&gmac1_miim
+		     &gmac1_tx_bus2
+		     &gmac1_rx_bus2
+		     &gmac1_rgmii_clk
+		     &gmac1_rgmii_bus>;
+
+	tx_delay = <0x42>;
+
+	phy-handle = <&rgmii_phy1>;
+	status = "okay";
+};
+&mdio1 {
+	rgmii_phy1: phy@1 {
+		compatible = "ethernet-phy-ieee802.3-c22";
+		reg = <0x1>;
+	};
 };
 &sata1 {
 	status = "okay";
