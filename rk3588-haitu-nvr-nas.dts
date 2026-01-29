@@ -21,6 +21,10 @@
 	model = "HT RK3588 NVR DEMO BOARD";
 	compatible = "rockchip,rk3588-lubancat", "rockchip,rk3588";
 
+	aliases {
+		mmc0 = &sdhci;
+	};
+
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -172,24 +176,6 @@
 		pinctrl-0 = <&vcc5v0_otg_en>;
 	};
 
-	combophy_avdd0v85: combophy-avdd0v85 {
-		compatible = "regulator-fixed";
-		regulator-name = "combophy_avdd0v85";
-		regulator-boot-on;
-		regulator-min-microvolt = <850000>;
-		regulator-max-microvolt = <850000>;
-		vin-supply = <&avdd_0v85_s0>;
-	};
-
-	combophy_avdd1v8: combophy-avdd1v8 {
-		compatible = "regulator-fixed";
-		regulator-name = "combophy_avdd1v8";
-		regulator-boot-on;
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		vin-supply = <&avcc_1v8_s0>;
-	};
-
 	vcc_1v1_nldo_s3: vcc-1v1-nldo-s3 {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc_1v1_nldo_s3";
@@ -200,26 +186,6 @@
 		vin-supply = <&vcc5v0_sys>;
 	};
 
-	vcc_3v3_s0: vcc-3v3-s0 {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc_3v3_s0";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		vin-supply = <&vcc_3v3_s3>;
-	};
-
-	vcc_3v3_sd_s3: vcc-3v3-sd-s3 {
-		compatible = "regulator-fixed";
-		regulator-name = "vcc_3v3_sd_s3";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		vin-supply = <&vcc_3v3_s3>;
-	};
-	
 	ext_cam_clk: external-camera-clock {
 		status = "okay";
 		compatible = "fixed-clock";
@@ -257,7 +223,6 @@
 				reg = <1>;
 				remote-endpoint = <&lt6911uxc_out0>;
 				data-lanes = <1 2 3 4>;
-				bus-format = "yuv422-8bit";
 			};
 		};
 
@@ -327,7 +292,6 @@
 	port {
 		cif_mipi_in2: endpoint {
 			remote-endpoint = <&mipi2_csi2_output>;
-			bus-format = "yuv422-8bit";
 		};
 	};
 };
@@ -338,14 +302,6 @@
 
 &rkcif_mmu {
 	status = "okay";
-};
-
-&i2s0_8ch {
-	status = "okay";
-	pinctrl-0 = <&i2s0_lrck
-		     &i2s0_sclk
-		     &i2s0_sdi0
-		     &i2s0_sdo0>;
 };
 
 &i2s5_8ch {
@@ -376,11 +332,9 @@
 };
 
 &gpu {
+	status = "okay";
 	mali-supply = <&vdd_gpu_s0>;
 	mem-supply = <&vdd_gpu_mem_s0>;
-	upthreshold = <60>;
-	downdifferential = <30>;
-	status = "okay";
 };
 
 &rockchip_suspend {
@@ -515,8 +469,33 @@
 	};
 };
 
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1m2_xfer>;
+	status = "okay";
+
+        vdd_npu_s0: vdd_npu_mem_s0: rk8602@42 {
+            compatible = "rockchip,rk8602";
+            reg = <0x42>;
+            vin-supply = <&vcc5v0_sys>;
+            regulator-compatible = "rk860x-reg";
+            regulator-name = "vdd_npu_s0";
+            regulator-min-microvolt = <550000>;
+            regulator-max-microvolt = <950000>;
+            regulator-ramp-delay = <2300>;
+            rockchip,suspend-voltage-selector = <1>;
+            regulator-boot-on;
+            regulator-always-on;
+            regulator-state-mem {
+                regulator-off-in-suspend;
+            };
+        };
+};
+
 &rknpu {
 	status = "okay";
+        rknpu-supply = <&vdd_npu_s0>;
+        mem-supply = <&vdd_npu_mem_s0>;
 };
 
 &rknpu_mmu {
@@ -593,21 +572,11 @@
 	};
 };
 
-&i2c5 {
-	status = "disabled";
-};
-
 &i2c6 {
-        compatible = "rockchip,rk3588-i2c", "rockchip,rk3399-i2c";
-        reg = <0x0 0xfec80000 0x0 0x1000>;
-        clocks = <&cru CLK_I2C6>, <&cru PCLK_I2C6>;
-        clock-names = "i2c", "pclk";
-        interrupts = <GIC_SPI 323 IRQ_TYPE_LEVEL_HIGH>;
+	status = "okay";
+	clock-frequency = <400000>;
 	pinctrl-names = "default";
         pinctrl-0 = <&i2c6m1_xfer>;
-        #address-cells = <1>;
-        #size-cells = <0>;
-	status = "okay";
 
 	hym8563@51 {
 		compatible = "haoyu,hym8563";
@@ -627,9 +596,6 @@
 		reg = <0x2b>;
 		clocks = <&ext_cam_clk>;
 		clock-names = "xvclk";
-		power-domains = <&power RK3588_PD_VI>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&lt6911uxc_pins>;
 		reset-gpio = <&gpio4 RK_PA2 GPIO_ACTIVE_LOW>;
 		interrupt-parent = <&gpio4>;
 		interrupts = <RK_PA5 IRQ_TYPE_EDGE_FALLING>;
@@ -638,11 +604,17 @@
 		rockchip,camera-module-name = "LT6911UXC-HDMI-RX";
 		rockchip,camera-module-lens-name = "HDMI-IN-1";
 
+		multi-dev-info {
+			dev-mode = <0>;
+			port-map = <0>;
+			lane-dist = <4>;
+			split-mode = <0>;
+		};
+
 		port {
 			lt6911uxc_out0: endpoint {
 				remote-endpoint = <&hdmi_mipi_in>;
 				data-lanes = <1 2 3 4>;
-				bus-format = "yuv422-8bit";
 			};
 		};
 	};
@@ -1150,6 +1122,8 @@
 	max-frequency = <200000000>;
 	mmc-hs400-1_8v;
 	mmc-hs400-enhanced-strobe;
+	vmmc-supply = <&vcc_3v3_s3>;
+	vqmmc-supply = <&vcc_1v8_s3>;
 	full-pwr-cycle-in-suspend;
 	status = "okay";
 };
@@ -1160,12 +1134,34 @@
 
 &display_subsystem {
 	status = "okay";
+	clocks = <&hdptxphy_hdmi0>, <&hdptxphy_hdmi1>;
+	clock-names = "hdmi0_phy_pll", "hdmi1_phy_pll";
+
+	route {
+		route_hdmi0: route-hdmi0 {
+			status = "okay";
+			logo,uboot = "logo.bmp";
+			logo,kernel = "logo_kernel.bmp";
+			logo,mode = "center";
+			charge_logo,mode = "center";
+			connect = <&vp0_out_hdmi0>;
+		};
+
+		route_hdmi1: route-hdmi1 {
+			status = "okay";
+			logo,uboot = "logo.bmp";
+			logo,kernel = "logo_kernel.bmp";
+			logo,mode = "center";
+			charge_logo,mode = "center";
+			connect = <&vp1_out_hdmi1>;
+		};
+	};
 };
 
-/* HDMI0 for 4K output */
 &hdmi0 {
 	status = "okay";
 	enable-gpios = <&gpio4 RK_PB1 GPIO_ACTIVE_HIGH>;
+	cec-enable = "true";
 };
 
 /* HDMI/eDP Combo PHY */
@@ -1181,23 +1177,15 @@
 	status = "okay";
 };
 
-&hdmi0_in_vp1 {
-	status = "disabled";
-};
-
-&hdmi0_in_vp2 {
-	status = "disabled";
-};
-
 &hdmi0_sound {
 	status = "okay";
 };
 
-&route_hdmi0{
-	status = "okay";
-};
-
 &hdmi1 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&hdmim2_tx1_cec &hdmim0_tx1_hpd
+			&hdmim1_tx1_scl &hdmim1_tx1_sda>;
+	cec-enable = "true";
 	status = "okay";
 };
 
@@ -1210,56 +1198,12 @@
 	status = "okay";
 };
 
-&hdmi1_in_vp0 {
-	status = "disabled";
-};
-
 &hdmi1_in_vp1 {
 	status = "okay";
 };
 
-&hdmi1_in_vp2 {
-	status = "disabled";
-};
-
 &hdmi1_sound {
 	status = "okay";
-};
-
-&route_hdmi1{
-	status = "okay";
-	connect = <&vp1_out_hdmi1>;
-	logo,uboot = "logo.bmp";
-	logo,kernel = "logo_kernel.bmp";
-	logo,mode = "center";
-	force-output;
-	force_timing {
-		clock-frequency = <594000000>;  // 4K@60Hz
-		hactive = <3840>;
-		vactive = <2160>;
-		hfront-porch = <48>;
-		hsync-len = <32>;
-		hback-porch = <80>;
-		vfront-porch = <3>;
-		vsync-len = <5>;
-		vback-porch = <23>;
-		hsync-active = <0>;
-		vsync-active = <0>;
-		de-active = <1>;
-		pixelclk-active = <1>;
-	};
-};
-
-&dp0 {
-	status = "disabled";
-	pinctrl-names = "default";
-	pinctrl-0 = <&dp0m2_pins>;
-};
-
-&dp1 {
-	status = "disabled";
-	pinctrl-names = "default";
-	pinctrl-0 = <&dp1m2_pins &dp_hdmi_ctl>;
 };
 
 &hdmirx_ctrler  {
@@ -1406,7 +1350,7 @@
 
 &vop {
 	status = "okay";
-	vop-supply = <&vdd_log_s0>;
+	disable-win-move;
 	assigned-clocks = <&cru ACLK_VOP>;
 	assigned-clock-rates = <800000000>;
 };
@@ -1417,6 +1361,7 @@
 
 // PCIe30 Port0 & Port1: M.2 M-Key
 &pcie3x4 {
+	num-lanes = <2>;
 	reset-gpios = <&gpio4 RK_PB6 GPIO_ACTIVE_HIGH>;
 	vpcie3v3-supply = <&vcc3v3_pcie30>;
 	status = "okay";
@@ -1471,26 +1416,26 @@
 /* vp0 & vp1 splice for 8K output */
 &vp0 {
 	rockchip,plane-mask = <(1 << ROCKCHIP_VOP2_CLUSTER0 | 1 << ROCKCHIP_VOP2_ESMART0)>;
-	rockchip,primary-plane = <ROCKCHIP_VOP2_ESMART0>;
-	cursor-win-id = <ROCKCHIP_VOP2_CLUSTER0>;
+	rockchip,primary-plane = <ROCKCHIP_VOP2_CLUSTER0>;
+	cursor-win-id = <ROCKCHIP_VOP2_ESMART0>;
 };
 
 &vp1 {
 	rockchip,plane-mask = <(1 << ROCKCHIP_VOP2_CLUSTER1 | 1 << ROCKCHIP_VOP2_ESMART1)>;
-	rockchip,primary-plane = <ROCKCHIP_VOP2_ESMART1>;
-	cursor-win-id = <ROCKCHIP_VOP2_CLUSTER1>;
+	rockchip,primary-plane = <ROCKCHIP_VOP2_CLUSTER1>;
+	cursor-win-id = <ROCKCHIP_VOP2_ESMART1>;
 };
 
 &vp2 {
 	rockchip,plane-mask = <(1 << ROCKCHIP_VOP2_CLUSTER2 | 1 << ROCKCHIP_VOP2_ESMART2)>;
-	rockchip,primary-plane = <ROCKCHIP_VOP2_ESMART2>;
-	cursor-win-id = <ROCKCHIP_VOP2_CLUSTER2>;
+	rockchip,primary-plane = <ROCKCHIP_VOP2_CLUSTER2>;
+	cursor-win-id = <ROCKCHIP_VOP2_ESMART2>;
 };
 
 &vp3 {
 	rockchip,plane-mask = <(1 << ROCKCHIP_VOP2_CLUSTER3 | 1 << ROCKCHIP_VOP2_ESMART3)>;
-	rockchip,primary-plane = <ROCKCHIP_VOP2_ESMART3>;
-	cursor-win-id = <ROCKCHIP_VOP2_CLUSTER3>;
+	rockchip,primary-plane = <ROCKCHIP_VOP2_CLUSTER3>;
+	cursor-win-id = <ROCKCHIP_VOP2_ESMART3>;
 };
 
 &pinctrl {
@@ -1546,9 +1491,8 @@
         	};	
 	};
 
-        lt6911uxc_pins: lt6911uxc-pins {
-		rockchip,pins = <4 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>,
-				<4 RK_PA2 RK_FUNC_GPIO &pcfg_pull_none>;
+        lt6911uxc_pin: lt6911uxc-pin {
+		rockchip,pins = <4 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
 	};
 
 	usb-typec {
