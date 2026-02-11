@@ -6,7 +6,6 @@
 
 /dts-v1/;
 
-#include <dt-bindings/usb/pd.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
 #include <dt-bindings/pinctrl/rockchip.h>
@@ -14,14 +13,18 @@
 #include <dt-bindings/display/drm_mipi_dsi.h>
 #include <dt-bindings/display/rockchip_vop.h>
 #include <dt-bindings/sensor-dev.h>
+#include <dt-bindings/usb/pd.h>
 #include "rk3588.dtsi"
+#include "rk3588-rk806-single.dtsi"
 #include "rk3588-linux.dtsi"
 
 / {
-	model = "HT RK3588 NVR DEMO BOARD";
-	compatible = "rockchip,rk3588-lubancat", "rockchip,rk3588";
+	model = "Haitu RK3588 Board";
+	compatible = "rockchip,rk3588";
 
 	aliases {
+		ethernet0 = &gmac0;
+		ethernet1 = &gmac1;
 		mmc0 = &sdhci;
 	};
 
@@ -37,6 +40,16 @@
 			reg = <0x0 (256 * 0x100000) 0x0 (256 * 0x100000)>;
 			linux,cma-default;
 		};
+	};
+
+	dp0_sound: dp0-sound {
+		status = "okay";
+		compatible = "rockchip,hdmi";
+		rockchip,card-name = "rockchip-dp0";
+		rockchip,mclk-fs = <512>;
+		rockchip,cpu = <&spdif_tx2>;
+		rockchip,codec = <&dp0 1>;
+		rockchip,jack-det;
 	};
 
 	hdmi0_sound: hdmi0-sound {
@@ -79,7 +92,6 @@
 		rockchip,cpu = <&i2s7_8ch>;
 		rockchip,codec = <&hdmirx_ctrler 0>;
 		rockchip,jack-det;
-		status = "okay";
 	};
 
 	test-power {
@@ -185,58 +197,6 @@
 		regulator-max-microvolt = <1100000>;
 		vin-supply = <&vcc5v0_sys>;
 	};
-
-	ext_cam_clk: external-camera-clock {
-		status = "okay";
-		compatible = "fixed-clock";
-		clock-frequency = <27000000>;
-		clock-output-names = "CLK_CAMERA_27MHZ";
-		#clock-cells = <0>;
-	};
-};
-
-&csi2_dphy0_hw {
-	status = "okay";
-};
-
-&csi2_dphy1_hw {
-	status = "okay";
-};
-
-&csi2_dphy0 {
-	compatible = "rockchip,rk3588-csi2-dphy";
-	rockchip,hw = <&csi2_dphy0_hw>, <&csi2_dphy1_hw>;
-	phys = <&mipidcphy0>, <&mipidcphy1>;
-	phy-names = "dcphy0", "dcphy1";
-	status = "okay";
-
-	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		port@0 {
-			reg = <0>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			hdmi_mipi_in: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&lt6911uxc_out0>;
-				data-lanes = <1 2 3 4>;
-			};
-		};
-
-		port@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			csidphy0_out: endpoint@0 {
-				reg = <0>;
-				remote-endpoint = <&mipi2_csi2_input>;
-			};
-		};
-	};
 };
 
 &av1d {
@@ -247,53 +207,16 @@
 	status = "okay";
 };
 
+&avsd {
+	status = "okay";
+};
+
 &rkisp0 {
 	status = "okay";
 };
 
 &isp0_mmu {
 	status = "okay";
-};
-
-&mipi2_csi2 {
-	status = "okay";
-
-	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		port@0 {
-			reg = <0>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			mipi2_csi2_input: endpoint@1 {
-				reg = <1>;
-				remote-endpoint = <&csidphy0_out>;
-			};
-		};
-		
-		port@1 {
-			reg = <1>;
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			mipi2_csi2_output: endpoint@0 {
-				reg = <0>;
-				remote-endpoint = <&cif_mipi_in2>;
-			};
-		};
-	};
-};
-
-&rkcif_mipi_lvds2 {
-	status = "okay";
-
-	port {
-		cif_mipi_in2: endpoint {
-			remote-endpoint = <&mipi2_csi2_output>;
-		};
-	};
 };
 
 &rkcif {
@@ -338,22 +261,8 @@
 };
 
 &rockchip_suspend {
-	status = "disabled";
+	status = "okay";
 	rockchip,sleep-debug-en = <1>;
-	rockchip,sleep-mode-config = <
-		(0
-		| RKPM_SLP_ARMOFF_DDRPD
-		| RKPM_SLP_PMU_PMUALIVE_32K
-		| RKPM_SLP_PMU_DIS_OSC
-		| RKPM_SLP_32K_EXT
-		)
-	>;
-	rockchip,wakeup-config = <
-		(0
-		| RKPM_GPIO_WKUP_EN
-		| RKPM_CPU0_WKUP_EN
-		)
-	>;
 };
 
 &usbdrd_dwc3_0 {
@@ -469,33 +378,39 @@
 	};
 };
 
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0m2_xfer>;
+	status = "okay";
+};
+
 &i2c1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1m2_xfer>;
 	status = "okay";
 
-        vdd_npu_s0: vdd_npu_mem_s0: rk8602@42 {
-            compatible = "rockchip,rk8602";
-            reg = <0x42>;
-            vin-supply = <&vcc5v0_sys>;
-            regulator-compatible = "rk860x-reg";
-            regulator-name = "vdd_npu_s0";
-            regulator-min-microvolt = <550000>;
-            regulator-max-microvolt = <950000>;
-            regulator-ramp-delay = <2300>;
-            rockchip,suspend-voltage-selector = <1>;
-            regulator-boot-on;
-            regulator-always-on;
-            regulator-state-mem {
-                regulator-off-in-suspend;
-            };
-        };
+	vdd_npu_s0: vdd_npu_mem_s0: rk8602@42 {
+		compatible = "rockchip,rk8602";
+		reg = <0x42>;
+		vin-supply = <&vcc5v0_sys>;
+		regulator-compatible = "rk860x-reg";
+		regulator-name = "vdd_npu_s0";
+		regulator-min-microvolt = <550000>;
+		regulator-max-microvolt = <950000>;
+		regulator-ramp-delay = <2300>;
+		rockchip,suspend-voltage-selector = <1>;
+		regulator-boot-on;
+		regulator-always-on;
+		regulator-state-mem {
+			regulator-off-in-suspend;
+		};
+	};
 };
 
 &rknpu {
 	status = "okay";
-        rknpu-supply = <&vdd_npu_s0>;
-        mem-supply = <&vdd_npu_mem_s0>;
+	rknpu-supply = <&vdd_npu_s0>;
+	mem-supply = <&vdd_npu_mem_s0>;
 };
 
 &rknpu_mmu {
@@ -576,7 +491,7 @@
 	status = "okay";
 	clock-frequency = <400000>;
 	pinctrl-names = "default";
-        pinctrl-0 = <&i2c6m1_xfer>;
+	pinctrl-0 = <&i2c6m1_xfer>;
 
 	hym8563@51 {
 		compatible = "haoyu,hym8563";
@@ -588,35 +503,6 @@
 		interrupt-parent = <&gpio2>;
 		interrupts = <RK_PB5 IRQ_TYPE_LEVEL_LOW>;
 		wakeup-source;
-	};
-
-	lt6911uxc: lt6911uxc@2b {
-		status = "okay";
-		compatible = "lontium,lt6911uxc";
-		reg = <0x2b>;
-		clocks = <&ext_cam_clk>;
-		clock-names = "xvclk";
-		reset-gpio = <&gpio4 RK_PA2 GPIO_ACTIVE_LOW>;
-		interrupt-parent = <&gpio4>;
-		interrupts = <RK_PA5 IRQ_TYPE_EDGE_FALLING>;
-		rockchip,camera-module-index = <0>;
-		rockchip,camera-module-facing = "external";
-		rockchip,camera-module-name = "LT6911UXC-HDMI-RX";
-		rockchip,camera-module-lens-name = "HDMI-IN-1";
-
-		multi-dev-info {
-			dev-mode = <0>;
-			port-map = <0>;
-			lane-dist = <4>;
-			split-mode = <0>;
-		};
-
-		port {
-			lt6911uxc_out0: endpoint {
-				remote-endpoint = <&hdmi_mipi_in>;
-				data-lanes = <1 2 3 4>;
-			};
-		};
 	};
 };
 
@@ -691,6 +577,22 @@
 };
 
 &usbdp_phy0_u3 {
+	status = "okay";
+};
+
+&dp0 {
+	status = "okay";
+};
+
+&dp0_in_vp2 {
+	status = "okay";
+};
+
+&dp0_sound {
+	status = "okay";
+};
+
+&spdif_tx2 {
 	status = "okay";
 };
 
@@ -1132,30 +1034,15 @@
 	status = "disabled";
 };
 
-&display_subsystem {
+&dmc {
 	status = "okay";
+	center-supply = <&vdd_ddr_s0>;
+	mem-supply = <&vdd_log_s0>;
+};
+
+&display_subsystem {
 	clocks = <&hdptxphy_hdmi0>, <&hdptxphy_hdmi1>;
 	clock-names = "hdmi0_phy_pll", "hdmi1_phy_pll";
-
-	route {
-		route_hdmi0: route-hdmi0 {
-			status = "okay";
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "center";
-			charge_logo,mode = "center";
-			connect = <&vp0_out_hdmi0>;
-		};
-
-		route_hdmi1: route-hdmi1 {
-			status = "okay";
-			logo,uboot = "logo.bmp";
-			logo,kernel = "logo_kernel.bmp";
-			logo,mode = "center";
-			charge_logo,mode = "center";
-			connect = <&vp1_out_hdmi1>;
-		};
-	};
 };
 
 &hdmi0 {
@@ -1182,11 +1069,11 @@
 };
 
 &hdmi1 {
-        pinctrl-names = "default";
-        pinctrl-0 = <&hdmim2_tx1_cec &hdmim0_tx1_hpd
-			&hdmim1_tx1_scl &hdmim1_tx1_sda>;
-	cec-enable = "true";
+	pinctrl-names = "default";
+	pinctrl-0 = <&hdmim2_tx1_cec &hdmim0_tx1_hpd
+			&hdmim2_tx1_scl &hdmim2_tx1_sda>;
 	status = "okay";
+	cec-enable = "true";
 };
 
 /* HDMI/eDP Combo PHY */
@@ -1214,6 +1101,10 @@
 	hdmirx-det-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&hdmim2_rx_cec &hdmim2_rx_hpdin &hdmim2_rx_scl &hdmim2_rx_sda &hdmirx_det>;
+};
+
+&hdmiin_sound {
+	status = "okay";
 };
 
 &iep {
@@ -1317,8 +1208,8 @@
 };
 
 &rkvenc0 {
-	venc-supply = <&vdd_log_s0>;
-	mem-supply = <&vdd_log_s0>;
+	venc-supply = <&vdd_vdenc_s0>;
+	mem-supply = <&vdd_vdenc_mem_s0>;
 	status = "okay";
 };
 
@@ -1327,12 +1218,16 @@
 };
 
 &rkvenc1 {
-	venc-supply = <&vdd_log_s0>;
-	mem-supply = <&vdd_log_s0>;
+	venc-supply = <&vdd_vdenc_s0>;
+	mem-supply = <&vdd_vdenc_mem_s0>;
 	status = "okay";
 };
 
 &rkvenc1_mmu {
+	status = "okay";
+};
+
+&rkvtunnel {
 	status = "okay";
 };
 
@@ -1460,18 +1355,24 @@
 		};
 	};
 
-        dp1 {
-            dp1m2-pins {
-                rockchip,pins = <1 RK_PA1 &hclk_vo1 &pcfg_pull_none>;
-            };
-        };
+	dp0 {
+		dp0m2_pins: dp0m2-pins {
+			rockchip,pins = <1 RK_PA0 &hclk_vo1 &pcfg_pull_none>;
+		};
+	};
 
-        dp {
-            dp_hdmi_ctl: dp-hdmi-ctl {
-                rockchip,pins = <0 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>,
-				<3 RK_PB2 RK_FUNC_GPIO &pcfg_pull_up>;
-            };
-        };
+	dp1 {
+		dp1m2-pins {
+			rockchip,pins = <1 RK_PA1 &hclk_vo1 &pcfg_pull_none>;
+		};
+	};
+
+	dp {
+		dp1_hdmi_ctl: dp-hdmi-ctl {
+			rockchip,pins = <0 RK_PD5 RK_FUNC_GPIO &pcfg_pull_up>,
+					<3 RK_PB2 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
 
 	rtc {
 		rtc_int: rtc-int {
@@ -1479,19 +1380,19 @@
 		};
 	};
 
-        pcie {
-            power_en: power-en {
-                rockchip,pins = <2 RK_PB4 RK_FUNC_GPIO &pcfg_output_high>;
-            };
-        };
-
-	hdmirx {
-        	hdmirx_det: hdmirx-det{
-            		rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_up>;
-        	};	
+	pcie {
+		power_en: power-en {
+			rockchip,pins = <2 RK_PB4 RK_FUNC_GPIO &pcfg_output_high>;
+		};
 	};
 
-        lt6911uxc_pin: lt6911uxc-pin {
+	hdmirx {
+		hdmirx_det: hdmirx-det{
+			rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	lt6911uxc_pin: lt6911uxc-pin {
 		rockchip,pins = <4 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
 	};
 
